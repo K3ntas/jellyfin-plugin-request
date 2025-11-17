@@ -2,6 +2,9 @@ name: Build and Release Plugin
 
 on:
   push:
+    branches:
+      - 'claude/fix-jellyfin-plugin-install-*'
+      - 'main'
     tags:
       - 'v*'
   workflow_dispatch:
@@ -45,34 +48,41 @@ jobs:
           echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
           echo "MD5 Checksum: $CHECKSUM"
 
-      - name: Create Release
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION="v1.0.1"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Using version: $VERSION"
+
+      - name: Create or update release
         id: create_release
-        uses: actions/create-release@v1
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Check if release exists
+          if gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "Release $VERSION exists, deleting old assets..."
+            gh release delete "$VERSION" --yes || true
+          fi
+
+          # Create new release
+          gh release create "$VERSION" \
+            --title "Release $VERSION" \
+            --notes "Release of Jellyfin Request Plugin $VERSION
+
+          **MD5 Checksum:** ${{ steps.checksum.outputs.checksum }}
+
+          To install:
+          1. Add the plugin repository to Jellyfin
+          2. Install from the plugin catalog
+          3. Or download the ZIP and extract to your Jellyfin plugins directory
+
+          Update manifest.json with this checksum: ${{ steps.checksum.outputs.checksum }}" \
+            Jellyfin.Plugin.RequestPlugin.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-          body: |
-            Release of Jellyfin Request Plugin ${{ github.ref_name }}
-
-            **MD5 Checksum:** ${{ steps.checksum.outputs.checksum }}
-
-            To install:
-            1. Download the ZIP file
-            2. Extract it to your Jellyfin plugins directory
-            3. Restart Jellyfin
-
-            Or install via the Jellyfin plugin catalog if added to a repository.
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./Jellyfin.Plugin.RequestPlugin.zip
-          asset_name: Jellyfin.Plugin.RequestPlugin.zip
-          asset_content_type: application/zip
