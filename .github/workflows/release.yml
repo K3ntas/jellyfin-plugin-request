@@ -1,0 +1,78 @@
+name: Build and Release Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build plugin
+        run: dotnet build -c Release --no-restore
+
+      - name: Create plugin directory structure
+        run: |
+          mkdir -p release/Jellyfin.Plugin.RequestPlugin
+          cp bin/Release/net9.0/Jellyfin.Plugin.RequestPlugin.dll release/Jellyfin.Plugin.RequestPlugin/
+          cp bin/Release/net9.0/Jellyfin.Plugin.RequestPlugin.pdb release/Jellyfin.Plugin.RequestPlugin/ || true
+
+      - name: Create ZIP archive
+        run: |
+          cd release
+          zip -r Jellyfin.Plugin.RequestPlugin.zip Jellyfin.Plugin.RequestPlugin/
+          cd ..
+          mv release/Jellyfin.Plugin.RequestPlugin.zip .
+
+      - name: Calculate MD5 checksum
+        id: checksum
+        run: |
+          CHECKSUM=$(md5sum Jellyfin.Plugin.RequestPlugin.zip | awk '{print $1}')
+          echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+          echo "MD5 Checksum: $CHECKSUM"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          body: |
+            Release of Jellyfin Request Plugin ${{ github.ref_name }}
+
+            **MD5 Checksum:** ${{ steps.checksum.outputs.checksum }}
+
+            To install:
+            1. Download the ZIP file
+            2. Extract it to your Jellyfin plugins directory
+            3. Restart Jellyfin
+
+            Or install via the Jellyfin plugin catalog if added to a repository.
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./Jellyfin.Plugin.RequestPlugin.zip
+          asset_name: Jellyfin.Plugin.RequestPlugin.zip
+          asset_content_type: application/zip
