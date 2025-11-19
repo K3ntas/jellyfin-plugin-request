@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.RequestPlugin.Models;
+using MediaBrowser.Common.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -16,10 +17,14 @@ namespace Jellyfin.Plugin.RequestPlugin.Data
         private readonly string _dataPath;
         private readonly SemaphoreSlim _saveLock = new SemaphoreSlim(1, 1);
 
-        public RequestRepository(ILogger<RequestRepository> logger, string dataPath)
+        public RequestRepository(ILogger<RequestRepository> logger, IApplicationPaths applicationPaths)
         {
             _logger = logger;
-            _dataPath = dataPath;
+            _dataPath = Path.Combine(
+                applicationPaths.PluginConfigurationsPath,
+                "RequestPlugin",
+                "requests.json"
+            );
 
             // Ensure directory exists
             var directory = Path.GetDirectoryName(_dataPath);

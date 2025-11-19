@@ -18,33 +18,20 @@ namespace Jellyfin.Plugin.RequestPlugin.Api
     public class RequestController : ControllerBase
     {
         private readonly ILogger<RequestController> _logger;
-        private readonly ILogger<RequestRepository> _repoLogger;
         private readonly IUserManager _userManager;
         private readonly IAuthorizationContext _authContext;
-        private readonly IApplicationPaths _applicationPaths;
         private readonly RequestRepository _repository;
 
         public RequestController(
             ILogger<RequestController> logger,
-            ILoggerFactory loggerFactory,
             IUserManager userManager,
             IAuthorizationContext authContext,
-            IApplicationPaths applicationPaths)
+            RequestRepository repository)
         {
             _logger = logger;
-            _repoLogger = loggerFactory.CreateLogger<RequestRepository>();
             _userManager = userManager;
             _authContext = authContext;
-            _applicationPaths = applicationPaths;
-
-            // Initialize repository with data path
-            var dataPath = System.IO.Path.Combine(
-                _applicationPaths.PluginConfigurationsPath,
-                "RequestPlugin",
-                "requests.json"
-            );
-
-            _repository = new RequestRepository(_repoLogger, dataPath);
+            _repository = repository;
         }
 
         // GET /Requests/All - Get all requests (admin sees all, users see their own)
