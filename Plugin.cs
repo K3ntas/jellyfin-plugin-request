@@ -19,7 +19,7 @@ namespace Jellyfin.Plugin.RequestPlugin
 
         public static Plugin? Instance { get; private set; }
 
-        public override string Name => "Request Plugin";
+        public override string Name => "Request";
 
         public override Guid Id => Guid.Parse("a1b2c3d4-5678-90ab-cdef-123456789abc");
 

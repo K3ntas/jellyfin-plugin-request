@@ -1,0 +1,8 @@
+      {
+        "version": "1.0.3.0",
+        "changelog": "v1.0.3: Fixed plugin name and script URL\n- Changed plugin name from 'Request Plugin' to 'Request'\n- Fixed JavaScript injection URL to /Request/requestplugin\n- Button should now load correctly",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/K3ntas/jellyfin-plugin-request/releases/download/v1.0.3/Jellyfin.Plugin.RequestPlugin.zip",
+        "checksum": "b916a1f2bfaa7a36df068e68f66f3f05",
+        "timestamp": "2025-11-19T20:21:00Z"
+      },

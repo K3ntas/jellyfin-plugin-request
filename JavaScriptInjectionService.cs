@@ -100,7 +100,7 @@ namespace Jellyfin.Plugin.RequestPlugin
 
                 var startComment = "<!-- BEGIN Request Plugin -->";
                 var endComment = "<!-- END Request Plugin -->";
-                var scriptTag = "<script defer src=\"/Request%20Plugin/requestplugin\"></script>";
+                var scriptTag = "<script defer src=\"/Request/requestplugin\"></script>";
 
                 var injectionBlock = $"{startComment}\n{scriptTag}\n{endComment}\n";
 
